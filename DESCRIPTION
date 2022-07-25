@@ -1,0 +1,28 @@
+Package: asclepius
+Type: Package
+Title: Simulate and Fit Disease Transmission on Networks
+Version: 0.1.0
+Author: person('Allen', 'OBrien', email= 'allen.g.obrien@gmail.com', role = c('aut', 'cre'))
+Maintainer: <allen.g.obrien@gmail.com>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+    cluster,
+    Matrix,
+    Rcpp
+RoxygenNote: 7.2.0
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo,
+    RcppProgress
+Collate: 
+    'RcppExports.R'
+    'asclepius-package.R'
+    's4_disease.R'
+    's4_traits.R'
+    's4_population.R'
+    's4_simulate.R'
+    'utils.R'

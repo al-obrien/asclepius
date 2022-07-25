@@ -1,0 +1,39 @@
+#' S4 class for disease
+#'
+#' @description Class for containing information on disease to simulation across a population.
+#'
+#' @name S4Disease
+#'
+#' @slot inf_prob Integer value for probability of infection; used in calculation of \code{beta (new infected) = inf_prob * # of successful contacts}.
+#' @slot infectious_period Integer value for infectious period.
+#' @slot latent_period Integer value for length of latent period (NOT IN USE).
+#' @slot incubation_period Integer value for length of incubation period (NOT IN USE).
+#' @slot convalescence_period Integer value for length of convalescence period; defines minimum time until can be infected again, otherwise known as the immunity period (NOT IN USE).
+#' @slot severity_coef Integer value for severity factor of disease (NOT IN USE).
+#'
+#' @seealso \code{\link{S4Population}}
+setClass("Disease",
+         slots = c(
+           inf_prob = 'numeric',
+           infectious_period = 'numeric',
+           latent_period = 'numeric',
+           incubation_period = 'numeric',
+           convalescence_period = 'numeric',
+           severity_coef = 'numeric' # ?? Use as multiplier that builds towards hosp, icu, or death? How easy it is to progress into severe outcomes
+         ))
+
+#' Constructor for S4 Disease class.
+#' @describeIn S4Disease Constructor for Disease class
+#' @param inf_prob Integer value for probability of infection.
+#' @param inf_p Integer value for infectious period.
+#'
+#' @export
+create_disease <- function(inf_prob, inf_p) {
+  inf_prob <- as.numeric(inf_prob)
+  inf_p <- as.numeric(inf_p)
+  new("Disease", inf_prob = inf_prob, infectious_period = inf_p)
+}
+
+#TODO add base values on recovery rate, incubation period, infectious period, hosprate, icurate, asymp, fatality rate
+#TODO each of the base disease values could be impacted by event range or population class...
+#TODO change beta to tau? beta is inf prob and contact rate...
