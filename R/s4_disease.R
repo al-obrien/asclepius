@@ -28,11 +28,31 @@ setClass("Disease",
 #' @param inf_p Integer value for infectious period.
 #'
 #' @export
-create_disease <- function(inf_prob, inf_p) {
+create_disease <- function(inf_prob, inf_p, conv_p = NULL) {
   inf_prob <- as.numeric(inf_prob)
   inf_p <- as.numeric(inf_p)
-  new("Disease", inf_prob = inf_prob, infectious_period = inf_p)
+  conv_p <- as.numeric(conv_p)
+  new("Disease", inf_prob = inf_prob, infectious_period = inf_p, convalescence_period = conv_p)
 }
+
+
+# ------------------------------------- #
+# Print method for Disease
+# ------------------------------------- #
+
+#' Show method for S4 Disease class.
+#' @param object S4Disease class.
+#' @describeIn S4Disease Show method for Disease class
+setMethod("show", "Disease", function(object) {
+  cat(is(object)[[1]], "\n",
+      "  Infection probability:  ", object@inf_prob, "\n",
+      "  Infectious period:      ", object@infectious_period, "\n",
+      "  Latent period:          ", object@latent_period, "\n",
+      "  Incubation period:      ", object@incubation_period, "\n",
+      "  Convalescence period:   ", object@convalescence_period, "\n",
+      sep = " "
+  )
+})
 
 #TODO add base values on recovery rate, incubation period, infectious period, hosprate, icurate, asymp, fatality rate
 #TODO each of the base disease values could be impacted by event range or population class...
