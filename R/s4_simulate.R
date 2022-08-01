@@ -47,6 +47,10 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
         stopifnot(length(Disease@convalescence_period) > 0) # Must have this to be valid
         state_list <- replicate(replications, sir(timesteps, init_inf, replications, Population, Disease, random_init))
         compartment_model <- 'sir(s)'
+      },
+      'SEIR' = {
+        state_list <- replicate(replications, seir(timesteps, init_inf, replications, Population, Disease, random_init))
+        compartment_model <- 'seir(s)'
       })
   }
 
@@ -66,68 +70,113 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
 setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replication = 1, timestep = 1, layout_f = igraph::layout_in_circle) {
   if(!network) {
 
-    if(x@compartment_model == 'si(s)') {
-      plot.new()
-      plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
-      axis(1)
-      axis(2)
-      if(ncol(x@states)>1) {
-        title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SI(S)')
-        lines(x = 1:x@timesteps,
-              Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-              col = 'red')
-        lines(x = 1:x@timesteps,
-              Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-              col = 'green')
-      } else {
-        title(xlab = 'Time step', ylab = 'Count', main = 'SI(S)')
-        lines(x = 1:x@timesteps,
-              x@states['infected_total',1][[1]],
-              col = 'red')
-        lines(x = 1:x@timesteps,
-              x@states['susceptible_total',1][[1]],
-              col = 'green')
-      }
-      legend(x = "topright", legend = c("S", "I"), col = c('green', 'red'), lty = 1)
-      box()
-    } else {
+    switch(x@compartment_model,
+           'si(s)' = {
+             plot.new()
+             plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+             axis(1)
+             axis(2)
+             if(ncol(x@states)>1) {
+               title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SI(S)')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'red')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'green')
+             } else {
+               title(xlab = 'Time step', ylab = 'Count', main = 'SI(S)')
+               lines(x = 1:x@timesteps,
+                     x@states['infected_total',1][[1]],
+                     col = 'red')
+               lines(x = 1:x@timesteps,
+                     x@states['susceptible_total',1][[1]],
+                     col = 'green')
+             }
+             legend(x = "topright", legend = c("S", "I"), col = c('green', 'red'), lty = 1)
+             box()
+           },
+           'sir(s)' = {
+             plot.new()
+             plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+             axis(1)
+             axis(2)
+             if(ncol(x@states)>1) {
+               title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SIR(S)')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'red')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'green')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['recovered_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'blue')
+             } else {
+               title(xlab = 'Time step', ylab = 'Count', main = 'SIR(S)')
+               lines(x = 1:x@timesteps,
+                     x@states['infected_total',1][[1]],
+                     col = 'red')
+               lines(x = 1:x@timesteps,
+                     x@states['susceptible_total',1][[1]],
+                     col = 'green')
+               lines(x = 1:x@timesteps,
+                     x@states['recovered_total',1][[1]],
+                     col = 'blue')
+             }
+             legend(x = "topright", legend = c("S", "I", "R"), col = c('green', 'red', 'blue'), lty = 1)
+             box()
+           },
+           'seir(s)' = {
+             plot.new()
+             plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+             axis(1)
+             axis(2)
+             if(ncol(x@states)>1) {
+               title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SEIR(S)')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'red')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'green')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['exposed_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'purple')
+               lines(x = 1:x@timesteps,
+                     Reduce(x@states['recovered_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+                     col = 'blue')
+             } else {
+               title(xlab = 'Time step', ylab = 'Count', main = 'SEIR(S)')
+               lines(x = 1:x@timesteps,
+                     x@states['infected_total',1][[1]],
+                     col = 'red')
+               lines(x = 1:x@timesteps,
+                     x@states['exposed_total',1][[1]],
+                     col = 'purple')
+               lines(x = 1:x@timesteps,
+                     x@states['susceptible_total',1][[1]],
+                     col = 'green')
+               lines(x = 1:x@timesteps,
+                     x@states['recovered_total',1][[1]],
+                     col = 'blue')
+             }
+             legend(x = "topright", legend = c("S","E", "I", "R"), col = c('green', 'purple', 'red', 'blue'), lty = 1)
+             box()
+           })
 
-      plot.new()
-      plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
-      axis(1)
-      axis(2)
-      if(ncol(x@states)>1) {
-        title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SIR(S)')
-        lines(x = 1:x@timesteps,
-              Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-              col = 'red')
-        lines(x = 1:x@timesteps,
-              Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-              col = 'green')
-        lines(x = 1:x@timesteps,
-              Reduce(x@states['recovered_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-              col = 'blue')
-      } else {
-        title(xlab = 'Time step', ylab = 'Count', main = 'SIR(S)')
-        lines(x = 1:x@timesteps,
-              x@states['infected_total',1][[1]],
-              col = 'red')
-        lines(x = 1:x@timesteps,
-              x@states['susceptible_total',1][[1]],
-              col = 'green')
-        lines(x = 1:x@timesteps,
-              x@states['recovered_total',1][[1]],
-              col = 'blue')
-      }
-      legend(x = "topright", legend = c("S", "I", "R"), col = c('green', 'red', 'blue'), lty = 1)
-      box()
-
-    }
 
   }
   if(network) {
     network_plot <- igraph::graph.adjacency(x@Population@contact_structure@adj_matrix, mode = 'undirected')
-    igraph::V(network_plot)$color <- ifelse(x@states['infected', replication][[replication]][[timestep]] == 1, 'red', 'lightblue')
+    igraph::V(network_plot)$color <- ifelse(x@states['infected', replication][[1]][[timestep]] == 1, 'red', 'lightgreen')
+    igraph::E(network_plot)$color <- ifelse(igraph::tail_of(network_plot, igraph::E(network_plot))$color == 'red', 'tomato1', 'lightgrey')
+    if (x@compartment_model %in% c('sir(s)', 'seir(s)')) {
+      igraph::V(network_plot)$color <- ifelse(x@states['recovered', replication][[1]][[timestep]] == 1, 'lightblue', igraph::V(network_plot)$color)
+      igraph::E(network_plot)$color <- ifelse(igraph::head_of(network_plot, igraph::E(network_plot))$color == 'lightblue' & igraph::E(network_plot)$color == 'tomato1',
+                                              'steelblue',
+                                              igraph::E(network_plot)$color)
+      }
     coord <- layout_f(network_plot)
     plot(network_plot, layout = coord)
   }

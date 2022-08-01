@@ -137,3 +137,11 @@ calculate_convalescence <- function(recov_v, conv_period) {
   new_susc <- rbinom(length(recov_v), recov_v, rate)
   new_susc
 }
+
+#TODO combine with similar utility calcs based on rbinom method?
+calculate_infectiousness <- function(expo_v, latent_p) {
+
+  rate <- 1/latent_p # Rate at each time step
+  new_expo <- rbinom(length(expo_v), expo_v, rate)
+  new_expo
+}
