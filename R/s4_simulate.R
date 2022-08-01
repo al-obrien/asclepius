@@ -26,20 +26,31 @@ setClass("Simulate",
 #' @param Population S4Population class.
 #' @param Disease S4Disease class.
 #' @param random_init Boolean to control if random set of infected in population selected for each simulation.
+#' @param transition_model Character or function to describe how transition occurs between disease states. Defaults include: SIS, SIR, and SEIR.
 #'
 #' @export
-run_simulation <- function(timesteps, init_inf, replications = 1, Population, Disease, random_init = TRUE) {
+run_simulation <- function(timesteps, init_inf, replications = 1, Population, Disease, random_init = TRUE, transition_model) {
 
   timesteps <- as.numeric(timesteps)
 
-  # Perform replications
-  if(length(Disease@convalescence_period) > 0) {
-    state_list <- replicate(replications, sir(timesteps, init_inf, replications, Population, Disease, random_init))
-    compartment_model <- 'sir(s)'
-  } else {
-    state_list <- replicate(replications, sis(timesteps, init_inf, replications, Population, Disease, random_init))
-    compartment_model <- 'si(s)'
+  # Perform replications on provided model
+  if(is.function(transition_model)) {
+    state_list <- replicate(replications, transition_model(timesteps, init_inf, replications, Population, Disease, random_init)) #TODO provide better way to validate user provided function (class?)
+    compartment_model <- 'Custom state model'
+  } else { browser()
+    switch(transition_model,
+      'SIS' = {
+        state_list <- replicate(replications, sis(timesteps, init_inf, replications, Population, Disease, random_init))
+        compartment_model <- 'si(s)'
+        },
+      'SIR' = {
+        stopifnot(length(Disease@convalescence_period) > 0) # Must have this to be valid
+        state_list <- replicate(replications, sir(timesteps, init_inf, replications, Population, Disease, random_init))
+        compartment_model <- 'sir(s)'
+      })
   }
+
+
 
   colnames(state_list) <- paste0('replicant', 1:replications)
   rownames(state_list) <- names(state_list[,1])
@@ -115,7 +126,8 @@ setMethod("plot", signature =  "Simulate", function(x) {
 
 })
 
-#TODO BETTER WAY TO ALLOW ANY COMBINATION FOR STATE SELECTION, AND CUSTOM ONES?
+#TODO BETTER WAY TO ALLOW ANY COMBINATION FOR STATE SELECTION, AND CUSTOM ONES? INSTEAD OF AUTOSLECT, HAVE IT PREDEFINED OR A CUSTOM FUNCTION  THAT THEN PERFORMS SOME BAIS CHECKS!
+#TODO possible convert compartment transition models to a method class? and user provided ones generated on the fly?
 #TODO ADD METHOD TO EXTRACT TOTALS
 #TODO ADD METHOD TO EXTRACT STATUS
 #TODO network at each step!

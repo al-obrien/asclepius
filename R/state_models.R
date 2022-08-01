@@ -69,5 +69,7 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
 }
 
 # Third possible generic/method (SEIR)
+seir <- function(timesteps, init_inf, replications, Population, Disease, random_init) { }
 
 # Fourth.. possible generic/method (SEIRF)
+seirf <- function(timesteps, init_inf, replications, Population, Disease, random_init) { }

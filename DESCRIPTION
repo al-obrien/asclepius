@@ -25,4 +25,5 @@ Collate:
     's4_traits.R'
     's4_population.R'
     's4_simulate.R'
+    'state_models.R'
     'utils.R'
