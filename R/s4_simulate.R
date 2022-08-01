@@ -53,18 +53,67 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
       Disease = Disease)
 }
 
-
+#TODO allow to work with replicants (SE and all plots)
 setMethod("plot", signature =  "Simulate", function(x) {
-  plot.new()
-  plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
-  axis(1)
-  axis(2)
-  title(xlab = 'Time step', ylab = 'Count', main = 'SIS')
-  lines(x = 1:x@timesteps, x@totals$infected, col = 'red')
-  lines(x = 1:x@timesteps, x@totals$susceptible, col = 'green')
-  box()
-})
+  if(x@compartment_model == 'si(s)') {
+    plot.new()
+    plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+    axis(1)
+    axis(2)
+    if(ncol(x@states)>1) {
+      title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SI(S)')
+      lines(x = 1:x@timesteps,
+            Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+            col = 'red')
+      lines(x = 1:x@timesteps,
+            Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+            col = 'green')
+    } else {
+      title(xlab = 'Time step', ylab = 'Count', main = 'SI(S)')
+      lines(x = 1:x@timesteps,
+            x@states['infected_total',1][[1]],
+            col = 'red')
+      lines(x = 1:x@timesteps,
+            x@states['susceptible_total',1][[1]],
+            col = 'green')
+    }
+    legend(x = "topright", legend = c("S", "I"), col = c('green', 'red'), lty = 1)
+    box()
+  } else {
 
+    plot.new()
+    plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+    axis(1)
+    axis(2)
+    if(ncol(x@states)>1) {
+      title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SIR(S)')
+      lines(x = 1:x@timesteps,
+            Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+            col = 'red')
+      lines(x = 1:x@timesteps,
+            Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+            col = 'green')
+      lines(x = 1:x@timesteps,
+            Reduce(x@states['recovered_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+            col = 'blue')
+    } else {
+      title(xlab = 'Time step', ylab = 'Count', main = 'SIR(S)')
+      lines(x = 1:x@timesteps,
+            x@states['infected_total',1][[1]],
+            col = 'red')
+      lines(x = 1:x@timesteps,
+            x@states['susceptible_total',1][[1]],
+            col = 'green')
+      lines(x = 1:x@timesteps,
+            x@states['recovered_total',1][[1]],
+            col = 'blue')
+    }
+    legend(x = "topright", legend = c("S", "I", "R"), col = c('green', 'red', 'blue'), lty = 1)
+    box()
+
+  }
+
+})
 
 #TODO BETTER WAY TO ALLOW ANY COMBINATION FOR STATE SELECTION, AND CUSTOM ONES?
 #TODO ADD METHOD TO EXTRACT TOTALS
