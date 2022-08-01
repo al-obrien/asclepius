@@ -55,6 +55,7 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
     stepdata_r[[i]] <- recov
   }
   names(stepdata) <- paste0('t',as.character(1:timesteps))
+  names(stepdata_r) <- paste0('t',as.character(1:timesteps))
 
   status_i <- as.data.frame(stepdata)
   status_r <- as.data.frame(stepdata_r)
