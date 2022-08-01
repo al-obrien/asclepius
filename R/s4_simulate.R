@@ -37,7 +37,7 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
   if(is.function(transition_model)) {
     state_list <- replicate(replications, transition_model(timesteps, init_inf, replications, Population, Disease, random_init)) #TODO provide better way to validate user provided function (class?)
     compartment_model <- 'Custom state model'
-  } else { browser()
+  } else {
     switch(transition_model,
       'SIS' = {
         state_list <- replicate(replications, sis(timesteps, init_inf, replications, Population, Disease, random_init))
@@ -49,8 +49,6 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
         compartment_model <- 'sir(s)'
       })
   }
-
-
 
   colnames(state_list) <- paste0('replicant', 1:replications)
   rownames(state_list) <- names(state_list[,1])
@@ -65,65 +63,74 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
 }
 
 #TODO allow to work with replicants (SE and all plots)
-setMethod("plot", signature =  "Simulate", function(x) {
-  if(x@compartment_model == 'si(s)') {
-    plot.new()
-    plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
-    axis(1)
-    axis(2)
-    if(ncol(x@states)>1) {
-      title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SI(S)')
-      lines(x = 1:x@timesteps,
-            Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-            col = 'red')
-      lines(x = 1:x@timesteps,
-            Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-            col = 'green')
-    } else {
-      title(xlab = 'Time step', ylab = 'Count', main = 'SI(S)')
-      lines(x = 1:x@timesteps,
-            x@states['infected_total',1][[1]],
-            col = 'red')
-      lines(x = 1:x@timesteps,
-            x@states['susceptible_total',1][[1]],
-            col = 'green')
-    }
-    legend(x = "topright", legend = c("S", "I"), col = c('green', 'red'), lty = 1)
-    box()
-  } else {
+setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replication = 1, timestep = 1, layout_f = igraph::layout_in_circle) {
+  if(!network) {
 
-    plot.new()
-    plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
-    axis(1)
-    axis(2)
-    if(ncol(x@states)>1) {
-      title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SIR(S)')
-      lines(x = 1:x@timesteps,
-            Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-            col = 'red')
-      lines(x = 1:x@timesteps,
-            Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-            col = 'green')
-      lines(x = 1:x@timesteps,
-            Reduce(x@states['recovered_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
-            col = 'blue')
+    if(x@compartment_model == 'si(s)') {
+      plot.new()
+      plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+      axis(1)
+      axis(2)
+      if(ncol(x@states)>1) {
+        title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SI(S)')
+        lines(x = 1:x@timesteps,
+              Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+              col = 'red')
+        lines(x = 1:x@timesteps,
+              Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+              col = 'green')
+      } else {
+        title(xlab = 'Time step', ylab = 'Count', main = 'SI(S)')
+        lines(x = 1:x@timesteps,
+              x@states['infected_total',1][[1]],
+              col = 'red')
+        lines(x = 1:x@timesteps,
+              x@states['susceptible_total',1][[1]],
+              col = 'green')
+      }
+      legend(x = "topright", legend = c("S", "I"), col = c('green', 'red'), lty = 1)
+      box()
     } else {
-      title(xlab = 'Time step', ylab = 'Count', main = 'SIR(S)')
-      lines(x = 1:x@timesteps,
-            x@states['infected_total',1][[1]],
-            col = 'red')
-      lines(x = 1:x@timesteps,
-            x@states['susceptible_total',1][[1]],
-            col = 'green')
-      lines(x = 1:x@timesteps,
-            x@states['recovered_total',1][[1]],
-            col = 'blue')
+
+      plot.new()
+      plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+      axis(1)
+      axis(2)
+      if(ncol(x@states)>1) {
+        title(xlab = 'Time step', ylab = paste0('Average count (', ncol(x@states), ' replications)'), main = 'SIR(S)')
+        lines(x = 1:x@timesteps,
+              Reduce(x@states['infected_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+              col = 'red')
+        lines(x = 1:x@timesteps,
+              Reduce(x@states['susceptible_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+              col = 'green')
+        lines(x = 1:x@timesteps,
+              Reduce(x@states['recovered_total',1:ncol(x@states)], f = `+`)/ncol(x@states),
+              col = 'blue')
+      } else {
+        title(xlab = 'Time step', ylab = 'Count', main = 'SIR(S)')
+        lines(x = 1:x@timesteps,
+              x@states['infected_total',1][[1]],
+              col = 'red')
+        lines(x = 1:x@timesteps,
+              x@states['susceptible_total',1][[1]],
+              col = 'green')
+        lines(x = 1:x@timesteps,
+              x@states['recovered_total',1][[1]],
+              col = 'blue')
+      }
+      legend(x = "topright", legend = c("S", "I", "R"), col = c('green', 'red', 'blue'), lty = 1)
+      box()
+
     }
-    legend(x = "topright", legend = c("S", "I", "R"), col = c('green', 'red', 'blue'), lty = 1)
-    box()
 
   }
-
+  if(network) {
+    network_plot <- igraph::graph.adjacency(x@Population@contact_structure@adj_matrix, mode = 'undirected')
+    igraph::V(network_plot)$color <- ifelse(x@states['infected', replication][[replication]][[timestep]] == 1, 'red', 'lightblue')
+    coord <- layout_f(network_plot)
+    plot(network_plot, layout = coord)
+  }
 })
 
 #TODO BETTER WAY TO ALLOW ANY COMBINATION FOR STATE SELECTION, AND CUSTOM ONES? INSTEAD OF AUTOSLECT, HAVE IT PREDEFINED OR A CUSTOM FUNCTION  THAT THEN PERFORMS SOME BAIS CHECKS!
