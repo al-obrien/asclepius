@@ -73,7 +73,7 @@ setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replicat
     switch(x@compartment_model,
            'si(s)' = {
              plot.new()
-             plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+             plot.window(xlim = c(0, x@timesteps), ylim = c(0, x@Population@n))
              axis(1)
              axis(2)
              if(ncol(x@states)>1) {
@@ -98,7 +98,7 @@ setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replicat
            },
            'sir(s)' = {
              plot.new()
-             plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+             plot.window(xlim = c(0, x@timesteps), ylim = c(0, x@Population@n))
              axis(1)
              axis(2)
              if(ncol(x@states)>1) {
@@ -129,7 +129,7 @@ setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replicat
            },
            'seir(s)' = {
              plot.new()
-             plot.window(xlim = c(0, x@timesteps), ylim = c(1, x@Population@n))
+             plot.window(xlim = c(0, x@timesteps), ylim = c(0, x@Population@n))
              axis(1)
              axis(2)
              if(ncol(x@states)>1) {
