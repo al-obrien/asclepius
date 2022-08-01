@@ -130,3 +130,10 @@ calculate_resolution <- function(infected_v, inf_period) {
   new_resol <- rbinom(length(infected_v), infected_v, rate)
   new_resol
 }
+
+calculate_convalescence <- function(recov_v, conv_period) {
+
+  rate <- 1/conv_period # Rate at each time step
+  new_susc <- rbinom(length(recov_v), recov_v, rate)
+  new_susc
+}
