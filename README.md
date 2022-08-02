@@ -1,0 +1,104 @@
+
+<!--  `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/v1/examples>. -->
+
+# **asclepius**
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+{asclepius} was created to perform agent based modeling of infectious
+disease transmission dynamics. The design has been to provide a set of
+tools to epidemiologists and public health data scientists to simulate
+various types of infectious diseases across varying populations and
+interventions/events. Components of the agent based modeling starts with
+modular building blocks. A *Population* is created using various
+demographics and a specified contact pattern for the transmission
+network. A *Disease* is created with various characteristics of interest
+such as infectiousness and latent period. These objects are then used to
+`run_simulation`s of a specified interval, replication, and transmission
+pattern (e.g. SI, SIR, SEIR, etc).
+
+Although {asclepius} attempts to make agent based models easy to
+perform, it should be used with caution and is not recommended nor
+encouraged to be used as the primary tool for creating evidence-based
+public health decisions.
+
+## Installation
+
+You can install the development version of asclepius from GitHub only:
+
+``` r
+remotes::install_github('al-obrien/asclepius')
+```
+
+## Functionality
+
+1.  Modular components to simulate disease transmission
+
+    -   Create populations of specific size, demographics, and contact
+        structure
+
+    -   Create a disease of defined base transmission probability and
+        latent period
+
+2.  Simulate disease transmission across specified contact structure for
+    defined time period and number of replications.
+
+    -   Plot values for aggregate agent states over time and networks of
+        a specific replication
+
+    -   Specify the particular disease transmission pattern (e.g. SI,
+        SIR, SEIR)
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+``` r
+# Load the package!
+library(asclepius)
+
+# Create population of 20 people with gender and age values
+sim_pop <- create_population(50) 
+sim_pop <- set_age(sim_pop, range = c(1:100))
+sim_pop <- set_gender(sim_pop, range = c('M','F'))
+
+# Create contact network
+sim_pop <- set_contacts(pop_obj = sim_pop,
+                        range = c(0,5),
+                        vars = c('age_structure', 'gender_structure'),
+                        mu = 0.33, variance = .001,
+                        progress = FALSE)
+
+# Create disease with an infectious period of 7 days on average, with sterilizing immunity
+sim_dis <- create_disease(inf_prob = 0.15, inf_p = 7, conv_p = Inf)
+
+sim_1 <- run_simulation(Population = sim_pop,
+                        Disease = sim_dis,
+                        timesteps = 50,
+                        init_inf = 5,
+                        replications = 10,
+                        transition_model = 'SIR')
+
+plot(sim_1)
+```
+
+<img src="man/figures/README-example-1.png" width="100%" />
+
+## Development
+
+{asclepius} has many planned features including:
+
+-   Expand flexibility/customizability of network creation, allowing
+    more rule checks and multi-modal distributions for contact patterns
+
+-   Add dynamic exit, entry, and reshuffling of population and contact
+    network
+
+-   Custom and additional package-provided transition models
+
+-   Additional methods to create and extract S4 class object values Fit
+    to data
+
+-   Add events like vaccination programs and health
+    measures/interventions Non-exponetial transitions
