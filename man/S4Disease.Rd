@@ -4,14 +4,23 @@
 \name{S4Disease}
 \alias{S4Disease}
 \alias{create_disease}
+\alias{show,Disease-method}
 \title{S4 class for disease}
 \usage{
-create_disease(inf_prob, inf_p)
+create_disease(inf_prob, inf_p, latent_p = NULL, conv_p = NULL)
+
+\S4method{show}{Disease}(object)
 }
 \arguments{
-\item{inf_prob}{Integer value for probability of infection.}
+\item{inf_prob}{Numeric value for probability of infection.}
 
-\item{inf_p}{Integer value for infectious period.}
+\item{inf_p}{Numeric value for infectious period.}
+
+\item{latent_p}{Numeric value for latent period.}
+
+\item{conv_p}{Numeric value for convalescence period.}
+
+\item{object}{S4Disease class.}
 }
 \description{
 Class for containing information on disease to simulation across a population.
@@ -19,22 +28,24 @@ Class for containing information on disease to simulation across a population.
 \section{Functions}{
 \itemize{
 \item \code{create_disease}: Constructor for Disease class
+
+\item \code{show,Disease-method}: Show method for Disease class
 }}
 
 \section{Slots}{
 
 \describe{
-\item{\code{inf_prob}}{Integer value for probability of infection; used in calculation of \code{beta (new infected) = inf_prob * # of successful contacts}.}
+\item{\code{inf_prob}}{Numeric value for probability of infection; used in calculation of \code{beta (new infected) = inf_prob * # of successful contacts}.}
 
-\item{\code{infectious_period}}{Integer value for infectious period.}
+\item{\code{infectious_period}}{Numeric value for infectious period.}
 
-\item{\code{latent_period}}{Integer value for length of latent period (NOT IN USE).}
+\item{\code{latent_period}}{Numeric value for length of latent period (useful for 'exposure period').}
 
-\item{\code{incubation_period}}{Integer value for length of incubation period (NOT IN USE).}
+\item{\code{incubation_period}}{Numeric value for length of incubation period (NOT IN USE).}
 
-\item{\code{convalescence_period}}{Integer value for length of convalescence period; defines minimum time until can be infected again, otherwise known as the immunity period (NOT IN USE).}
+\item{\code{convalescence_period}}{Numeric value for length of convalescence period; defines minimum time until can be infected again, otherwise known as the immunity period (NOT IN USE).}
 
-\item{\code{severity_coef}}{Integer value for severity factor of disease (NOT IN USE).}
+\item{\code{severity_coef}}{Numeric value for severity factor of disease (NOT IN USE).}
 }}
 
 \seealso{

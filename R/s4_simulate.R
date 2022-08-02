@@ -67,6 +67,7 @@ run_simulation <- function(timesteps, init_inf, replications = 1, Population, Di
 }
 
 #TODO allow to work with replicants (SE and all plots)
+#' @export
 setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replication = 1, timestep = 1, layout_f = igraph::layout_in_circle) {
   if(!network) {
 
@@ -188,6 +189,9 @@ setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replicat
 #TODO ADD METHOD TO EXTRACT STATUS
 #TODO network at each step!
 #TODO standardize the y axis, so its 0-1 instead of counts...
+#TODO, for perhaps when adding events... may use signature for another METHOD
+#TODO... option here is constructor of SIMULATION can have various methods inside that change based on what signature is provied (no events? then much simpler)
+#TODO final decision on if want to returns sim object... or takes in sim object?
 
 # Add option for...how to sample, not exact sample?
 # setGeneric("run_simulation_sis", function( Population, Disease, timesteps, init_inf) standardGeneric("run_simulation_sis"))
@@ -213,6 +217,4 @@ setMethod("plot", signature =  "Simulate", function(x, network = FALSE, replicat
 #   #TODO Add specific object contains each slice details
 # })
 
-#TODO, for perhaps when adding events... may use signature for another METHOD
-#TODO... option here is constructor of SIMULATION can have various methods inside that change based on what signature is provied (no events? then much simpler)
-#TODO final decision on if want to returns sim object... or takes in sim object?
+

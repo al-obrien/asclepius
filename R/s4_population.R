@@ -75,6 +75,7 @@ setGeneric("get_age", function(pop_obj, value) standardGeneric("get_age"))
 #' Retrieve age structure of Population (S4 Class).
 #' @param pop_obj S4Population class.
 #' @describeIn S4Population Method for retrieving age structure of Population class
+#' @export
 setMethod("get_age", "Population", function(pop_obj, value = NULL) {pop_obj@age_structure@value})
 
 
@@ -86,6 +87,7 @@ setGeneric("set_age", function(pop_obj, value = NULL, range) standardGeneric("se
 #' @param value Vector of user-provided values for set operation (default: NULL, assigns a sample based on \code{range} parameter).
 #' @param range Vector of min/max values for valid age.
 #' @describeIn S4Population Method for setting age structure of Population class
+#' @export
 setMethod("set_age", "Population", function(pop_obj, value = NULL, range) {
   if(is.null(value)) value <- sample(range, pop_obj@n, replace = TRUE)
   pop_obj@age_structure <- new('BasicTrait', value = value, range = range)
@@ -104,6 +106,7 @@ setGeneric("get_gender", function(pop_obj, value) standardGeneric("get_gender"))
 
 #' Retrieve gender structure of Population (S4 Class).
 #' @describeIn S4Population Method for retrieving gender structure of Population class
+#' @export
 setMethod("get_gender", "Population", function(pop_obj, value = NULL) {pop_obj@gender_structure@value})
 
 
@@ -112,6 +115,7 @@ setGeneric("set_gender", function(pop_obj, value = NULL, range) standardGeneric(
 
 #' Set gender structure of Population (S4 Class).
 #' @describeIn S4Population Method for setting gender structure of Population class
+#' @export
 setMethod("set_gender", "Population", function(pop_obj, value = NULL, range) {
   if(is.null(value)) value <- sample(range, pop_obj@n, replace = TRUE)
   value <- as.character(value)
@@ -130,7 +134,7 @@ setMethod("set_gender", "Population", function(pop_obj, value = NULL, range) {
 # ------------------------------------- #
 
 # S4Population Generic for setting contact structure of Population class
-setGeneric("set_contacts", function(pop_obj, value = NULL, range, vars = c(), rule_list = NULL, mu, variance, random_fill = TRUE) standardGeneric("set_contacts"))
+setGeneric("set_contacts", function(pop_obj, value = NULL, range, vars = c(), rule_list = NULL, mu, variance, random_fill = TRUE, progress = TRUE) standardGeneric("set_contacts"))
 
 #' Set contact structure of Population (S4 Class).
 #' @param vars Vector of variable names of interest to create contact patterns (e.g. gender and age).
@@ -138,13 +142,17 @@ setGeneric("set_contacts", function(pop_obj, value = NULL, range, vars = c(), ru
 #' @param mu Numeric value for \eqn{mu} for beta distribution (\eqn{mu = a / (a + b)}); determines heterogeneity of contact patterns.
 #' @param variance Numeric value for beta distribution; used with \eqn{mu} to determine beta distribution shape parameters for contact pattern sampling.
 #' @param random_fill Boolean value to determine if population is filled in random ordering (default: \code{TRUE}); otherwise will go in provided row order.
+#' @param progress Boolean value to determine whether or not a progress bar is shown for creating the network; helfpul if you need networks for population of 10,000 and over.
 #' @describeIn S4Population Method for setting contact structure of Population class
 #' @export
 setMethod("set_contacts", "Population", function(pop_obj,
                                                  value = NULL,
                                                  range,
                                                  vars = c(),
-                                                 rule_list = NULL, mu, variance, random_fill = TRUE) {
+                                                 rule_list = NULL,
+                                                 mu, variance,
+                                                 random_fill = TRUE,
+                                                 progress = TRUE) {
 
   # Create blank matrix
   adj_mat_sp <- Matrix::Matrix(data = 0, nrow = pop_obj@n, ncol = pop_obj@n, sparse = TRUE)
@@ -211,7 +219,7 @@ setMethod("set_contacts", "Population", function(pop_obj,
   # ------------------- #
   # Fill adj matrix
   # ------------------- #
-  adj_mat_sp <- init_adj_matrix_cpp(adj_mat_sp, cnct_matrix, cmb_dat_wAttr$ID, cmb_dat_wAttr$contacts, fillO)
+  adj_mat_sp <- init_adj_matrix_cpp(adj_mat_sp, cnct_matrix, cmb_dat_wAttr$ID, cmb_dat_wAttr$contacts, fillO, display_progress = progress)
 
 
   } else {
@@ -227,7 +235,7 @@ setMethod("set_contacts", "Population", function(pop_obj,
                                       cnct_matrix,
                                       rep(1, pop_obj@n), # All have same contact pattern
                                       pop_obj@contact_structure@value,
-                                      fillO)
+                                      fillO, display_progress = progress)
 
     # If matrix has no contacts, throw a warning
     if(sum(adj_mat_sp, na.rm = TRUE) < 1) warning('Adjacency matrix is all 0 (i.e. has no contacts filled). Double check that this is intentional!');

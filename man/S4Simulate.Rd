@@ -6,7 +6,15 @@
 \alias{run_simulation}
 \title{S4 class for disease simulation}
 \usage{
-run_simulation(timesteps, init_inf, replications = 1, Population, Disease)
+run_simulation(
+  timesteps,
+  init_inf,
+  replications = 1,
+  Population,
+  Disease,
+  random_init = TRUE,
+  transition_model
+)
 }
 \arguments{
 \item{timesteps}{Numeric value.}
@@ -18,6 +26,10 @@ run_simulation(timesteps, init_inf, replications = 1, Population, Disease)
 \item{Population}{S4Population class.}
 
 \item{Disease}{S4Disease class.}
+
+\item{random_init}{Boolean to control if random set of infected in population selected for each simulation.}
+
+\item{transition_model}{Character or function to describe how transition occurs between disease states. Defaults include: SIS, SIR, and SEIR.}
 }
 \description{
 Class for simulating disease process using population and disease classes

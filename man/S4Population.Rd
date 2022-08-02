@@ -32,7 +32,8 @@ create_population(n)
   rule_list = NULL,
   mu,
   variance,
-  random_fill = TRUE
+  random_fill = TRUE,
+  progress = TRUE
 )
 }
 \arguments{
@@ -55,6 +56,8 @@ create_population(n)
 \item{variance}{Numeric value for beta distribution; used with \eqn{mu} to determine beta distribution shape parameters for contact pattern sampling.}
 
 \item{random_fill}{Boolean value to determine if population is filled in random ordering (default: \code{TRUE}); otherwise will go in provided row order.}
+
+\item{progress}{Boolean value to determine whether or not a progress bar is shown for creating the network; helfpul if you need networks for population of 10,000 and over.}
 }
 \description{
 An S4 class to create a population for disease simulation.
