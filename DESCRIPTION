@@ -21,6 +21,7 @@ LinkingTo:
 Collate: 
     'RcppExports.R'
     'asclepius-package.R'
+    'data.R'
     's4_disease.R'
     's4_traits.R'
     's4_population.R'
