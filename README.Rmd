@@ -86,10 +86,12 @@ plot(sim_1)
 
 -   Expand flexibility/customizability of network creation, allowing more rule checks and multi-modal distributions for contact patterns
 
--   Add dynamic exit, entry, and reshuffling of population and contact network
+-   Add dynamic exit, entry, and reshuffling of population and contact network (randomly or based on characteristics), including migration, births, and deaths.
 
 -   Custom and additional package-provided transition models
 
 -   Additional methods to create and extract S4 class object values Fit to data
 
--   Add events like vaccination programs and health measures/interventions Non-exponetial transitions
+-   Add events like vaccination programs and health measures/interventions Non-exponential transitions
+
+-   Add various options for fitting procedures, including multiple objective optimization (to fit multiple end states) and various LOSS functions; better handling of fitting on mixed continuous and discrete parameters with defined boundaries, perhaps through transformations.

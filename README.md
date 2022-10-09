@@ -93,7 +93,8 @@ plot(sim_1)
     more rule checks and multi-modal distributions for contact patterns
 
 -   Add dynamic exit, entry, and reshuffling of population and contact
-    network
+    network (randomly or based on characteristics), including migration,
+    births, and deaths.
 
 -   Custom and additional package-provided transition models
 
@@ -101,4 +102,10 @@ plot(sim_1)
     to data
 
 -   Add events like vaccination programs and health
-    measures/interventions Non-exponetial transitions
+    measures/interventions Non-exponential transitions
+
+-   Add various options for fitting procedures, including multiple
+    objective optimization (to fit multiple end states) and various LOSS
+    functions; better handling of fitting on mixed continuous and
+    discrete parameters with defined boundaries, perhaps through
+    transformations.
