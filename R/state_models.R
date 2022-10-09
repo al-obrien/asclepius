@@ -12,16 +12,25 @@ sis <- function(timesteps, init_inf, replications, Population, Disease, random_i
   stepdata <- vector(mode = "list", length = timesteps)
   stepdata[[1]] <- inf
 
-  # Initialize recovered (instantly suscpetible again)
+  new_i <- vector(mode = "numeric", length = timesteps)
+  new_i[[1]] <- init_inf
+
+  # Initialize recovered (instantly susceptible again)
   recov <- rep(0,Population@n)
 
   for(i in 2:timesteps) {
-    inf <- calculate_prob_inf(Population@contact_structure@adj_matrix, inf, Disease@inf_prob)
+    inf_l <- calculate_prob_inf(Population@contact_structure@adj_matrix, inf, Disease@inf_prob, )
+    inf <- inf_l$all_inf
+    new_inf <- inf_l$new_inf
+
     recov <- calculate_resolution(inf, inf_period = Disease@infectious_period) #TODO dont include infected that just joined on this cycle
     inf <- inf-recov
     stepdata[[i]] <- inf # Track inf at each step to return
+    new_i[[i]] <- sum(new_inf)
   }
+
   names(stepdata) <- paste0('t',as.character(1:timesteps))
+  names(new_i) <- paste0('t',as.character(1:timesteps))
 
   status_i <- as.data.frame(stepdata)
   status_s <- 1-status_i
@@ -29,7 +38,11 @@ sis <- function(timesteps, init_inf, replications, Population, Disease, random_i
   inf_t <- colSums(status_i) #TODO add via methods?
   sus_t <- colSums(status_s)
 
-  list(susceptible = status_s, infected = status_i, susceptible_total = sus_t, infected_total = inf_t)
+  list(susceptible = status_s,
+       infected = status_i,
+       infected_new = new_i,
+       susceptible_total = sus_t,
+       infected_total = inf_t)
 }
 
 
@@ -46,6 +59,8 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
   } else {inf[1:init_inf] <- 1}
   stepdata <- vector(mode = "list", length = timesteps)
   stepdata[[1]] <- inf
+  new_i <- vector(mode = "numeric", length = timesteps)
+  new_i[[1]] <- init_inf
 
   # Initialize recovered (different from new_recov)
   recov <- rep(0,Population@n)
@@ -53,7 +68,9 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
   stepdata_r[[1]] <- recov
 
   for(i in 2:timesteps) {
-    inf <- calculate_prob_inf(Population@contact_structure@adj_matrix, inf, Disease@inf_prob)
+    inf_l <- calculate_prob_inf(Population@contact_structure@adj_matrix, inf, Disease@inf_prob)
+    inf <- inf_l$all_inf
+    new_inf <- inf_l$new_inf
     inf[inf-recov<=0] <- 0 # If was in recovered state at beginning revert infection back to 0
 
     conv <- calculate_convalescence(recov, Disease@convalescence_period) # Determine who will be susc again..
@@ -66,9 +83,12 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
 
     stepdata[[i]] <- inf # Track inf at each step to return
     stepdata_r[[i]] <- recov
+    new_i[[i]] <- sum(new_inf)
   }
+
   names(stepdata) <- paste0('t',as.character(1:timesteps))
   names(stepdata_r) <- paste0('t',as.character(1:timesteps))
+  names(new_i) <- paste0('t',as.character(1:timesteps))
 
   status_i <- as.data.frame(stepdata)
   status_r <- as.data.frame(stepdata_r)
@@ -78,36 +98,43 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
   sus_t <- colSums(status_s)
   rec_t <- colSums(status_r)
 
-  list(susceptible = status_s, infected = status_i,recovered = status_r,
-       susceptible_total = sus_t, infected_total = inf_t, recovered_total = rec_t)
+  list(susceptible = status_s,
+       infected = status_i,
+       recovered = status_r,
+       infected_new = new_i,
+       susceptible_total = sus_t,
+       infected_total = inf_t,
+       recovered_total = rec_t)
 }
 
 
 # -------------------------------- #
 # SEIR
 # -------------------------------- #
+
 #NOTE YET FUNCTIONING WITH EXPOSED?
+
 seir <- function(timesteps, init_inf, replications, Population, Disease, random_init) {
 
   # Create empty states
   recov <- expo <- inf <- rep(0,Population@n)
   stepdata_r <- stepdata_e <- stepdata <- vector(mode = "list", length = timesteps)
+  new_i <- vector(mode = "numeric", length = timesteps)
 
   # Add initial states infected to inf vector
   if(random_init) {
     inf[sample(1:Population@n, init_inf, replace = FALSE)] <- 1
   } else {inf[1:init_inf] <- 1}
   stepdata[[1]] <- inf
-
   stepdata_r[[1]] <- recov
-
   stepdata_e[[1]] <- expo
- # browser()
+  new_i[[1]] <- init_inf
+
   # Update states
   for(i in 2:timesteps) {
 
     # Newly exposed, S->E
-    new_expo <- calculate_prob_inf(Population@contact_structure@adj_matrix, inf, Disease@inf_prob, new_only = TRUE)
+    new_expo <- calculate_prob_inf(Population@contact_structure@adj_matrix, inf, Disease@inf_prob, only_new = TRUE)
     new_expo[new_expo-recov <= 0] <- 0 # If was in recovered state at beginning revert infection back to 0
     new_expo[new_expo-expo <= 0] <- 0 # Necessary to ensure exposures that transition this cyle arent recycled in expo
 
@@ -131,9 +158,11 @@ seir <- function(timesteps, init_inf, replications, Population, Disease, random_
     stepdata[[i]] <- inf # Track inf at each step to return
     stepdata_r[[i]] <- recov
     stepdata_e[[i]] <- expo
+    new_i[[i]] <- sum(new_inf)
   }
   names(stepdata_e) <- names(stepdata_r) <- names(stepdata) <- paste0('t',as.character(1:timesteps))
- # browser()
+  names(new_i) <- paste0('t',as.character(1:timesteps))
+
   status_i <- as.data.frame(stepdata)
   status_r <- as.data.frame(stepdata_r)
   status_e <- as.data.frame(stepdata_e)
@@ -148,11 +177,13 @@ seir <- function(timesteps, init_inf, replications, Population, Disease, random_
        exposed = status_e,
        infected = status_i,
        recovered = status_r,
+       infected_new = new_i,
        susceptible_total = sus_t,
        exposed_total = exp_t,
        infected_total = inf_t,
        recovered_total = rec_t)
 }
 
+#TODO add fatal status...exit contact network
 # Fourth.. possible generic/method (SEIRF)
 seirf <- function(timesteps, init_inf, replications, Population, Disease, random_init) { }

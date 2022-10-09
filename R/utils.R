@@ -103,7 +103,8 @@ rule_check <- function(var_list, rule_list, as_matrix = TRUE){
 
 
 # TODO, combine w/ infectious period?
-calculate_prob_inf <- function(contact_m, infected_v, beta, new_only = FALSE) {
+calculate_prob_inf <- function(contact_m, infected_v, beta, only_new = FALSE, only_all = FALSE) {
+  if(beta > 1 || beta < 0) warning('Non-sense beta provided, outside of [0,1] bounds.')
   tau <- beta # beta * c(.1,.2,.3) ... Can add adjusted later... dep on contact type and other variables and time, offset by infec and by contact or events
   num_contacts <- contact_m %*% infected_v
   #TODO Add block vector to account for if state of exposed is dead or immune... maybe cut from network?
@@ -111,23 +112,27 @@ calculate_prob_inf <- function(contact_m, infected_v, beta, new_only = FALSE) {
   #TODO Add another function for exposure time instead of inf (so new 'infected' are swapped to E and then each start determines if goes to Inf)
   prob <- 1 - (1 - tau)^num_contacts # 1 - (Reduce(`*`, (1-tau))) where tau length is number of contacts  of various prob
   prob[infected_v==1] <- 0 # force existing infected to 0
-  new_infected <- rbinom(length(prob), size = 1, as.vector(prob,mode = 'numeric'))
+  new_infected <- rbinom(length(prob), size = 1, as.vector(prob, mode = 'numeric'))
   all_inf <- infected_v + new_infected
   all_inf[all_inf > 1] <- 1 # Just in case...
 
-  if(new_only) {
+  if(only_new) {
     return(new_infected)
-  } else {
-    return(all_inf)
+    } else if (only_all) {
+      return(all_inf)
+      } else {
+        return(list(new_inf = new_infected,
+                    all_inf = all_inf))
+      }
   }
-}
 
 calculate_resolution <- function(infected_v, inf_period) {
+  if(inf_period <= 0) warning('Non-sense inf_period provided (<=0).')
   #TODO add gamma distirubiotn or custom params
   #TODO do so by having the inf_period as a vector assigned sampled from dis of choice...
   #TODO ...#comb_recov <- rate # Consider other factors to incr/decr rates?
   rate <- 1/inf_period # Rate at each time step
-  new_resol <- rbinom(length(infected_v), infected_v, rate)
+  new_resol <- rbinom(length(infected_v), infected_v, rate) # vector of inf b/c only trial is if infected already... and rate is constant
   new_resol
 }
 
@@ -145,3 +150,18 @@ calculate_infectiousness <- function(expo_v, latent_p) {
   new_expo <- rbinom(length(expo_v), expo_v, rate)
   new_expo
 }
+
+# Helper function to do various rescaling from one place
+calculate_rescale <- function(x, type = 'maxmin', ...) {
+  switch(type,
+         'maxmin' = {scales::rescale(x, ...)}, # Between 0,1 or other arbitrary range
+         'none' = {x},
+         'simple' = {x / max(x, ...)}, # Similar to maxmin if min is 0
+         'standardize' = {scale(x, ...)}, # mean 0, with sd of x
+         'log' = {log(x, ...)},
+         'robust' = { (x - median(x, ...)) / (quantile(x, probs = 0.75) - quantile(x, probs = 0.25))}, # Useful when many outliers
+         'unitlength' = { x / sqrt(sum(x^2, ...))}, # Euclidean length (x / ||x||)
+         'mean' = {(x - mean(x, ...)) / (max(x, ...) - min(x, ...))} # -1 to 1, mean 0
+  )
+}
+
