@@ -105,7 +105,7 @@ plot(sim_1)
     measures/interventions Non-exponential transitions
 
 -   Add various options for fitting procedures, including multiple
-    objective optimization (to fit multiple end states) and various LOSS
+    objective optimization (to fit multiple end states) and various loss
     functions; better handling of fitting on mixed continuous and
     discrete parameters with defined boundaries, perhaps through
     transformations.

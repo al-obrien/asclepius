@@ -3,6 +3,7 @@
 export(create_disease)
 export(create_population)
 export(init_adj_matrix_cpp)
+export(loss_func)
 export(run_simulation)
 exportMethods(get_age)
 exportMethods(get_gender)
