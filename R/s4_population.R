@@ -129,12 +129,11 @@ setMethod("set_gender", "Population", function(pop_obj, value = NULL, range) {
 # Contact structure generics/methods
 
 # Assign the number of contacts, determine distance
-#TODO add complete homogeneous (i.e. ignore contact), or create at random from igraph options
-#TODO ASSIGN RANDOM GRAPH OF THEIR CHOICE OF SET ALGORITHM
+#TODO review assignment of add complete homogeneous (i.e. ignore contact) or RANDOM GRAPH OF THEIR CHOICE OF SET ALGORITHM
 # ------------------------------------- #
 
 # S4Population Generic for setting contact structure of Population class
-setGeneric("set_contacts", function(pop_obj, value = NULL, range, vars = c(), rule_list = NULL, mu, variance, random_fill = TRUE, progress = TRUE) standardGeneric("set_contacts"))
+setGeneric("set_contacts", function(pop_obj, value = NULL, range = NULL, vars = c(), rule_list = NULL, mu = NULL, variance = NULL, random_fill = TRUE, custom_adj_m = NULL, progress = TRUE) standardGeneric("set_contacts"))
 
 #' Set contact structure of Population (S4 Class).
 #' @param vars Vector of variable names of interest to create contact patterns (e.g. gender and age).
@@ -142,17 +141,49 @@ setGeneric("set_contacts", function(pop_obj, value = NULL, range, vars = c(), ru
 #' @param mu Numeric value for \eqn{mu} for beta distribution (\eqn{mu = a / (a + b)}); determines heterogeneity of contact patterns.
 #' @param variance Numeric value for beta distribution; used with \eqn{mu} to determine beta distribution shape parameters for contact pattern sampling.
 #' @param random_fill Boolean value to determine if population is filled in random ordering (default: \code{TRUE}); otherwise will go in provided row order.
+#' @param custom_adj_m Provide a predefined adjacency matrix (e.g. \code{igraph::as_adj(igraph::make_lattice(c(10,10)))}), overrides default adj_matrix creation by values.
 #' @param progress Boolean value to determine whether or not a progress bar is shown for creating the network; helfpul if you need networks for population of 10,000 and over.
 #' @describeIn S4Population Method for setting contact structure of Population class
 #' @export
 setMethod("set_contacts", "Population", function(pop_obj,
                                                  value = NULL,
-                                                 range,
+                                                 range = NULL,
                                                  vars = c(),
                                                  rule_list = NULL,
-                                                 mu, variance,
+                                                 mu = NULL, variance = NULL,
                                                  random_fill = TRUE,
+                                                 custom_adj_m = NULL,
                                                  progress = TRUE) {
+
+
+  # ---------------------------------- #
+  # Generate network from provided adj matrix (e.g. igraph)
+  # ---------------------------------- #
+  if(!is.null(custom_adj_m)) {
+
+    # Ensure its provided as a matrix of some kind...
+    stopifnot(inherits(custom_adj_m, 'Matrix') | is.matrix(custom_adj_m))
+    stopifnot(Matrix::isSymmetric(custom_adj_m))
+    stopifnot(pop_obj@n == nrow(custom_adj_m))
+
+    # Matrix of 1 cell for all same contact pattern (assume all the same)
+    cnct_matrix <- matrix(NA, 1, dimnames = list('1', '1'))
+
+    # Populate slot for final outputs (most are not useful if just random assignment)
+    pop_obj@contact_structure@value <- NA
+    pop_obj@contact_structure@range <- NA
+    pop_obj@contact_structure@contact_matrix <- cnct_matrix
+    pop_obj@contact_structure@adj_matrix <- custom_adj_m
+    validObject(pop_obj)
+
+    # Break out of function, return without doing the default behaviour...
+    return(pop_obj)
+  }
+
+
+  # ---------------------------------- #
+  # Generate adj_matrix based on inputs provided
+  # ---------------------------------- #
 
   # Create blank matrix
   adj_mat_sp <- Matrix::Matrix(data = 0, nrow = pop_obj@n, ncol = pop_obj@n, sparse = TRUE)

@@ -58,7 +58,7 @@ This is a basic example which shows you how to solve a common problem:
 # Load the package!
 library(asclepius)
 
-# Create population of 20 people with gender and age values
+# Create population of 50 people with gender and age values
 sim_pop <- create_population(50) 
 sim_pop <- set_age(sim_pop, range = c(1:100))
 sim_pop <- set_gender(sim_pop, range = c('M','F'))
