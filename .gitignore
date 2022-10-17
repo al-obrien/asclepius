@@ -10,3 +10,4 @@ staging/
 .Ruserdata
 archive
 scratchpad
+inst/doc

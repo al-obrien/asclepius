@@ -1,0 +1,207 @@
+---
+title: "Simulate daycare Outbreaks"
+output: 
+  rmarkdown::html_vignette:
+    code_folding: hide
+vignette: >
+  %\VignetteIndexEntry{Simulate daycare Outbreaks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The `asclepius` package provides tools to simulate an outbreak under a variety of scenarios. In this basic example, an outbreak will be simulated under conditions one may expect in a day-care setting. A user-defined contact network will be created to delineate parent, child, staff connections and how those influence spread of disease under various types of infection characteristics (e.g. infectivity, infectious period, etc.).
+
+<br>
+
+# Load required packages
+
+```{r setup, warning = FALSE, message = FALSE, class.source = 'fold-show'}
+library(asclepius)
+library(igraph)
+library(kableExtra)
+```
+
+<br>
+
+# Create simulated daycare network
+
+## Create agents of daycare setting
+
+This particular outbreak will be in a small daycare; this will keep the visualizations of the networks more manageable. Ten children attend the daycare, with five staff members. Each child attending the daycare have two parents. The `unique_id` column uses the prefixes `C`, `P`, or `S` to delineate children, parents, and staff. The suffix number describes which family each individual belongs. There are a total of ten families (since there are 1 child per family in the daycare); furthermore, the staff do not belong to any family unit at the daycare.
+
+```{r}
+# Ten children in daycare
+children <- 1:10
+
+# Two parents per child, 1 child per family unit
+parents <- rep(1:2, length.out = length(children) * 2)
+family_unit <- sort(rep(seq(1,length(children), by = 1),2))
+
+# Five staff members
+staff <- 1:5
+
+# Combine data
+nodes <- data.frame(family_id = c(children, family_unit, rep(NA, length(staff))),
+                    person_id = c(paste0('C', children), paste0('P', parents), paste0('S', staff)),
+                    type = c(rep('C', length(children)), rep('P', length(parents)), rep('S', length(staff))))
+nodes$unique_id <-  paste0(nodes$person_id, '_', nodes$family_id)
+
+sample_table <- knitr::kable(nodes) 
+sample_table <- kable_styling(sample_table, "striped", full_width = FALSE)
+scroll_box(sample_table, width = '300px', height = "500px")
+```
+
+## Create the contact pattern based on family unit
+
+The assumed contact pattern is that all children and staff are a fully connected network. However, the parents will have contact with only those within their family unit. This means, an infected parent can only infect other children and staff via their child attending daycare.
+
+```{r, warning = FALSE}
+# All Contact patterns, default to connected
+contact_prob <- expand.grid(nodes$unique_id,nodes$unique_id)
+contact_prob$prob <- 1
+
+# Negate parent contacts outside direct family unit
+contact_prob$family_unit <- as.numeric(stringr::str_sub(contact_prob$Var1, -1)) == as.numeric(stringr::str_sub(contact_prob$Var2, -1))
+contact_prob[is.na(contact_prob$family_unit),]$family_unit<- FALSE
+contact_prob$parent_flag <- grepl('^P', contact_prob$Var1) | grepl('^P', contact_prob$Var2)
+contact_prob[!contact_prob$family_unit & contact_prob$parent_flag, ]$prob <- 0
+```
+
+## Create adjacency matrix
+
+Although `asclepius` has capabilities to automatically generate contact networks based upon characteristics of each agent in the network, it is also possible to create the matrix by hand.
+
+```{r}
+# Order to ensure proper matrix filling
+contact_prob <- contact_prob[order(contact_prob$Var1),]
+
+# Assign contact to adj matrix
+adj_mat <- matrix(contact_prob$prob, nrow=nrow(nodes), ncol = nrow(nodes))
+```
+
+## Plot contact structure of daycare setting
+
+Once an adjacency matrix is defined to determine the structure of the network, one can remove visualize the patterns using the `igraph` package. It is also useful to clean-up a custom adjacency matrix by removing loop patterns (e.g. self-contacts).
+
+```{r, fig.height = 8, fig.width=8, out.width = '100%'}
+# Convert to edge graph for plotting
+igraph_adj <- igraph::graph.adjacency(adj_mat, mode = 'undirected')
+
+# Remove loop on same node
+igraph_adj <- simplify(igraph_adj, remove.loops = TRUE)
+
+# Format
+V(igraph_adj)$color <- c(rep('yellow', length(children)), 
+                         rep('lightblue', length(parents)),
+                         rep('red', length(staff)))
+V(igraph_adj)$label <- nodes$unique_id
+
+plot(igraph_adj,
+     vertex.label.color= "black",
+     vertex.label.cex = .7,
+     vertex.frame.color= 'white',
+     layout = layout_with_fr(igraph_adj))
+```
+
+## Create population object for simulation
+
+Now we start using `asclepius`; we begin by creating the `S4` population object. As stated earlier, this network was predefined as being 35 agents (i.e. individuals). We use `set_contacts()` with the `custom_adj_m` parameter to inform the simulation that a custom adjacency matrix for the agents was provided.
+
+```{r}
+# Initialize pop object
+sim_pop <- create_population(nrow(nodes))
+
+# Sparse matrix without loops and use custom adj_matrix
+adj_mat <- as_adj(igraph_adj)
+sim_pop <- set_contacts(sim_pop, custom_adj_m = adj_mat)
+```
+
+<br>
+
+# Create disease options
+
+To understand how different infections impact the outbreak, two scenarios are defined:
+
+1.  `dis_low` probability is less than 1/3 of contacts that occur and the infectious period is low.
+
+2.  `dis_high` that is highly infectious (80% of contacts are successful to transmit), and the infectious period is longer on average.
+
+For simplicity, both scenarios have the same latent period, and they have sterilizing immunity following infection.
+
+```{r}
+dis_low <- create_disease(inf_prob = 0.3, inf_p = 3, latent_p = 2, conv_p = Inf)
+dis_high <- create_disease(inf_prob = 0.8, inf_p = 6, latent_p = 2, conv_p = Inf)
+```
+
+<br>
+
+# Simulate disease scenarios
+
+## Staff infected initially...
+
+Under the first simulation scenario, we infect one of the staff members (index 31) and simulated for 30 time-steps. The simulation is replicated 5 times assuming an *SEIR* state transition model.
+
+```{r}
+sim_low <- run_simulation(sim_pop, dis_low,
+                          init_inf = 31, assign_init = 'index',
+                          timesteps = 30, replications = 5,
+                          transition_model = 'SEIR')
+
+sim_high <- run_simulation(sim_pop, dis_high,
+                           init_inf = 31, assign_init = 'index',
+                           timesteps = 30, replications = 5,
+                           transition_model = 'SEIR')
+```
+
+The network below displays which staff member is infected under each replication of the simulation. The <span style='color: red;'>red</span> nodes indicate *infected* agents, whilst <span style='color: green;'>green</span> nodes are *susceptible*.
+
+```{r, out.width = '100%', fig.width = 9, fig.height = 7}
+plot(sim_low, network = T, layout = igraph::layout_with_fr)
+```
+
+Unsurprisingly, the less infectious disease means a portion of individuals in the network are never infected.
+
+```{r, out.width = '100%', fig.width = 9, fig.height = 12}
+par(mfrow = c(2,1))
+plot(sim_low)
+mtext('Low infectivity, staff infected', side = 3, line = 0, adj = 0.01)
+plot(sim_high)
+mtext('High infectivity, staff infected', side = 3, line = 0, adj = 0.01)
+```
+
+## Parents infected initially...
+
+```{r}
+sim_low <- run_simulation(sim_pop, dis_low,
+                          init_inf = c(13,14), assign_init = 'index',
+                          timesteps = 30, replications = 5,
+                          transition_model = 'SEIR')
+
+sim_high <- run_simulation(sim_pop, dis_high,
+                           init_inf = c(13,14), assign_init = 'index',
+                           timesteps = 30, replications = 5,
+                           transition_model = 'SEIR')
+```
+
+The network below displays which parents are infected under reach replication of the simulation.
+
+```{r, out.width = '100%', fig.width = 9, fig.height = 7}
+plot(sim_low, network = T, layout = igraph::layout_with_fr)
+```
+
+Compared to the simulation with staff being infected, due to the limited entry of parent contacts via their child into the daycare network, the effect of both disease types are dampened compared to the prior scenario with the staff initially infected. This highlights the importance of which nodes are initially infected with respect to their connectivity to the rest of the network.
+
+```{r, out.width = '100%', fig.width = 9, fig.height = 12}
+par(mfrow = c(2,1))
+plot(sim_low)
+mtext('Low infectivity, parents infected', side = 3, line = 0, adj = 0.01)
+plot(sim_high)
+mtext('High infectivity, parents infected', side = 3, line = 0, adj = 0.01)
+```
