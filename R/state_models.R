@@ -2,18 +2,22 @@
 # -------------------------------- #
 # SIS MODEL, will be SI if inf period is INF
 # -------------------------------- #
-sis <- function(timesteps, init_inf, replications, Population, Disease, random_init) {
+sis <- function(timesteps, init_inf, replications, Population, Disease, assign_init) {
 
   # Initialize infected
   inf <- rep(0,Population@n)
-  if(random_init) {
+  if(assign_init == 'random') {
     inf[sample(1:Population@n, init_inf, replace = FALSE)] <- 1
-  } else {inf[1:init_inf] <- 1}
+  } else if (assign_init == 'index') { # Not random but want to assign specific Infected
+    inf[init_inf] <- 1
+  } else { # If not a vector, assign from top down by number
+    inf[1:init_inf] <- 1
+  }
   stepdata <- vector(mode = "list", length = timesteps)
   stepdata[[1]] <- inf
 
   new_i <- vector(mode = "numeric", length = timesteps)
-  new_i[[1]] <- init_inf
+  new_i[[1]] <- sum(inf) # Sum b/c could be using index method
 
   # Initialize recovered (instantly susceptible again)
   recov <- rep(0,Population@n)
@@ -50,17 +54,21 @@ sis <- function(timesteps, init_inf, replications, Population, Disease, random_i
 # SIR MODEL, generic/method (SIR and SIRS)
 # -------------------------------- #
 
-sir <- function(timesteps, init_inf, replications, Population, Disease, random_init) {
+sir <- function(timesteps, init_inf, replications, Population, Disease, assign_init) {
 
   # Initialize infected
   inf <- rep(0,Population@n)
-  if(random_init) {
+  if(assign_init == 'random') {
     inf[sample(1:Population@n, init_inf, replace = FALSE)] <- 1
-  } else {inf[1:init_inf] <- 1}
+  } else if (assign_init == 'index') { # Not random but want to assign specific Infected
+    inf[init_inf] <- 1
+  } else { # If not a vector, assign from top down by number
+    inf[1:init_inf] <- 1
+  }
   stepdata <- vector(mode = "list", length = timesteps)
   stepdata[[1]] <- inf
   new_i <- vector(mode = "numeric", length = timesteps)
-  new_i[[1]] <- init_inf
+  new_i[[1]] <- sum(inf) # Sum b/c could be using index method
 
   # Initialize recovered (different from new_recov)
   recov <- rep(0,Population@n)
@@ -114,7 +122,7 @@ sir <- function(timesteps, init_inf, replications, Population, Disease, random_i
 
 #NOTE YET FUNCTIONING WITH EXPOSED?
 
-seir <- function(timesteps, init_inf, replications, Population, Disease, random_init) {
+seir <- function(timesteps, init_inf, replications, Population, Disease, assign_init) {
 
   # Create empty states
   recov <- expo <- inf <- rep(0,Population@n)
@@ -122,13 +130,17 @@ seir <- function(timesteps, init_inf, replications, Population, Disease, random_
   new_i <- vector(mode = "numeric", length = timesteps)
 
   # Add initial states infected to inf vector
-  if(random_init) {
+  if(assign_init == 'random') {
     inf[sample(1:Population@n, init_inf, replace = FALSE)] <- 1
-  } else {inf[1:init_inf] <- 1}
+  } else if (assign_init == 'index') { # Not random but want to assign specific Infected
+    inf[init_inf] <- 1
+  } else { # If not a vector, assign from top down by number
+    inf[1:init_inf] <- 1
+  }
   stepdata[[1]] <- inf
   stepdata_r[[1]] <- recov
   stepdata_e[[1]] <- expo
-  new_i[[1]] <- init_inf
+  new_i[[1]] <- sum(inf) # Sum b/c could be using index method
 
   # Update states
   for(i in 2:timesteps) {
@@ -186,4 +198,4 @@ seir <- function(timesteps, init_inf, replications, Population, Disease, random_
 
 #TODO add fatal status...exit contact network
 # Fourth.. possible generic/method (SEIRF)
-seirf <- function(timesteps, init_inf, replications, Population, Disease, random_init) { }
+seirf <- function(timesteps, init_inf, replications, Population, Disease, assign_init) { }

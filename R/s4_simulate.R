@@ -21,35 +21,35 @@ setClass("Simulate",
 #'
 #' @describeIn S4Simulate Constructor for disease simulation class
 #' @param timesteps Numeric value.
-#' @param init_inf Numeric value.
+#' @param init_inf Numeric value; if vector, will assign infected by index.
 #' @param replications Integer value (NOT INTEGERATED YET...PERHAPS METHOD INSTEAD?).
 #' @param Population S4Population class.
 #' @param Disease S4Disease class.
-#' @param random_init Boolean to control if random set of infected in population selected for each simulation.
+#' @param assign_init Character value to control if random set of infected in population selected for each simulation (options are 'random', 'index', or 'range').
 #' @param transition_model Character or function to describe how transition occurs between disease states. Defaults include: SIS, SIR, and SEIR.
 #'
 #' @export
-run_simulation <- function(timesteps, init_inf, replications = 1, Population, Disease, random_init = TRUE, transition_model) {
+run_simulation <- function(timesteps, init_inf, replications = 1, Population, Disease, assign_init = 'random', transition_model) {
 
   timesteps <- as.numeric(timesteps)
 
   # Perform replications on provided model
   if(is.function(transition_model)) {
-    state_list <- replicate(replications, transition_model(timesteps, init_inf, replications, Population, Disease, random_init)) #TODO provide better way to validate user provided function (class?)
+    state_list <- replicate(replications, transition_model(timesteps, init_inf, replications, Population, Disease, assign_init)) #TODO provide better way to validate user provided function (class?)
     compartment_model <- 'Custom state model'
   } else {
     switch(transition_model,
       'SIS' = {
-        state_list <- replicate(replications, sis(timesteps, init_inf, replications, Population, Disease, random_init))
+        state_list <- replicate(replications, sis(timesteps, init_inf, replications, Population, Disease, assign_init))
         compartment_model <- 'si(s)'
         },
       'SIR' = {
         stopifnot(length(Disease@convalescence_period) > 0) # Must have this to be valid
-        state_list <- replicate(replications, sir(timesteps, init_inf, replications, Population, Disease, random_init))
+        state_list <- replicate(replications, sir(timesteps, init_inf, replications, Population, Disease, assign_init))
         compartment_model <- 'sir(s)'
       },
       'SEIR' = {
-        state_list <- replicate(replications, seir(timesteps, init_inf, replications, Population, Disease, random_init))
+        state_list <- replicate(replications, seir(timesteps, init_inf, replications, Population, Disease, assign_init))
         compartment_model <- 'seir(s)'
       })
   }
