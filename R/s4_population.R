@@ -203,10 +203,10 @@ setMethod("set_contacts", "Population", function(pop_obj,
     # Vars provided must be one of the available traits in the class
     stopifnot(!names(vars) %in% slotNames(pop_obj))
 
-    var_list <- lapply(vars, \(x) slot(pop_obj, x)@range)
-    dat_list <- lapply(vars, \(x) slot(pop_obj, x)@value)
+    var_list <- lapply(vars, function(x) {slot(pop_obj, x)@range} )
+    dat_list <- lapply(vars, function(x) {slot(pop_obj, x)@value} )
 
-    stopifnot("At least one of provided `vars` is all NA." = vapply(dat_list, \(x) !all(is.na(x)), logical(1))) # If all are NA for a var then dont run...
+    stopifnot("At least one of provided `vars` is all NA." = vapply(dat_list, function(x) {!all(is.na(x))}, logical(1))) # If all are NA for a var then dont run...
 
     names(var_list) <- vars
     names(dat_list) <- vars

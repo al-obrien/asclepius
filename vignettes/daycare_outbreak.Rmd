@@ -1,10 +1,10 @@
 ---
-title: "Simulate daycare Outbreaks"
+title: "Simulate daycare outbreaks"
 output: 
   rmarkdown::html_vignette:
     code_folding: hide
 vignette: >
-  %\VignetteIndexEntry{Simulate daycare Outbreaks}
+  %\VignetteIndexEntry{Simulate daycare outbreaks}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

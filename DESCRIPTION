@@ -1,7 +1,7 @@
 Package: asclepius
 Type: Package
 Title: Simulate and Fit Disease Transmission on Networks
-Version: 0.1.0
+Version: 0.1.1
 Author: person('Allen', 'OBrien', email= 'allen.g.obrien@gmail.com', role = c('aut', 'cre'))
 Maintainer: <allen.g.obrien@gmail.com>
 Description: More about what it does (maybe more than one line)

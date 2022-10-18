@@ -68,11 +68,11 @@ merge_keep_order <- function(data1, data2, idrow = NULL, sort = FALSE, ...) {
 ruletest <- function(data, rule_set){
 
   # Check that sum of those that match is same as total entries that should match;
-  sum_check <- colSums(apply(data, 1, \(x) tabulate(match(x,rule_set), length(rule_set)))) == length(rule_set)
+  sum_check <- colSums(apply(data, 1, function(x) {tabulate(match(x,rule_set), length(rule_set))} )) == length(rule_set)
 
   # Ensure that unique length matches the unique values provided
-  length_check <- apply(data, 1, \(x) match(x,rule_set))
-  length_check <- apply(length_check, 2, \(x) length(unique(na.omit(x))) == length(unique(rule_set)))
+  length_check <- apply(data, 1, function(x) match(x,rule_set))
+  length_check <- apply(length_check, 2, function(x) {length(unique(na.omit(x))) == length(unique(rule_set))} )
 
   comb_check <- length_check & sum_check
   return(comb_check)
